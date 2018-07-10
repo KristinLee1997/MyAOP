@@ -14,7 +14,7 @@ import org.junit.Test;
 public class TestJDKProxy {
     @Test
     public void testJDKProxy() {
-        BeanFactory ac = new ClassPathXmlApplicationContext("/applicationContext_jdk.xml");
+        BeanFactory ac = new ClassPathXmlApplicationContext("/applicationContext-jdk.xml");
         UserDao userDao = (UserDao) ac.getBean("userDaoProxy");
         System.out.println(userDao.getClass());
         userDao.add("kristin");

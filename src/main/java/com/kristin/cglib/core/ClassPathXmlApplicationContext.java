@@ -1,5 +1,7 @@
 package com.kristin.cglib.core;
 
+
+import com.kristin.cglib.aop.ProxyFactoryBean;
 import com.kristin.cglib.config.Bean;
 import com.kristin.cglib.config.Property;
 import com.kristin.cglib.config.parsing.ConfigurationManager;
@@ -49,30 +51,44 @@ public class ClassPathXmlApplicationContext implements BeanFactory {
      * @return
      */
     private Object createBeanByConfig(Bean bean) {
+        // 根据bean信息创建对象
         Class clazz = null;
         Object beanObj = null;
         try {
             clazz = Class.forName(bean.getClassName());
-            //创建bean对象
+            // 创建bean对象
             beanObj = clazz.newInstance();
-            //获取bean的属性
+            // 获取bean对象中的property配置
             List<Property> properties = bean.getProperties();
+            // 遍历bean对象中的property配置,并将对应的value或者ref注入到bean对象中
             for (Property prop : properties) {
                 Map<String, Object> params = new HashMap<>();
                 if (prop.getValue() != null) {
                     params.put(prop.getName(), prop.getValue());
+                    // 将value值注入到bean对象中
                     BeanUtils.populate(beanObj, params);
                 } else if (prop.getRef() != null) {
                     Object ref = context.get(prop.getRef());
+                    // 如果依赖对象还未被加载则递归创建依赖的对象
                     if (ref == null) {
                         ref = createBeanByConfig(config.get(prop.getRef()));
                     }
                     params.put(prop.getName(), ref);
+                    // 将ref对象注入bean对象中
                     BeanUtils.populate(beanObj, params);
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            // 说明是要创建代理对象
+            if (clazz.equals(ProxyFactoryBean.class)) {
+                ProxyFactoryBean factoryBean = (ProxyFactoryBean) beanObj;
+                // 创建代理对象
+                beanObj = factoryBean.createProxy();
+            }
+
+        } catch (Exception e1) {
+            e1.printStackTrace();
+            throw new RuntimeException("创建" + bean.getClassName() + "对象失败");
         }
         return beanObj;
     }

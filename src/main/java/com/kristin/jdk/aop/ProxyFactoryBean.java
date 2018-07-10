@@ -40,6 +40,7 @@ public class ProxyFactoryBean {
      * @return
      */
     public Object createProxy() {
+        //判断有没有指定proxyInterface,没有指定就用CGLib方式
         if (proxyInterface == null || proxyInterface.trim().length() == 0) {
             return createCGLibProxy();
         }
